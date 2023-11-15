@@ -1,2 +1,2 @@
-# azure-cloud-resume
+# Azure-Cloud-Resume
 My Azure Cloud Resume
