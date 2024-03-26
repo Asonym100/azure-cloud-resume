@@ -19,4 +19,3 @@ const getVisitCount = () =>{
     return count; 
        
 }
-
