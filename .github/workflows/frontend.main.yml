@@ -1,0 +1,29 @@
+name: deploy_frontend
+#Deploys when push is made from front end folder
+
+on:
+    push:
+        branches: [ main ]
+        paths:
+        - 'frontend/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: azure/login@v1
+      with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Upload to blob storage
+      uses: azure/CLI@v1
+      with:
+        inlineScript: |
+            az storage blob upload-batch --account-name cloudsiterg99f1 --auth-mode key -d '$web' -s frontend/
+
+  # Azure logout
+    - name: logout
+      run: |
+            az logout
+      if: always()
