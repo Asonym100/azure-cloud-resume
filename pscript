@@ -38,3 +38,26 @@ Write-Output "Setup completed successfully."
 settings = jsonencode({
   commandToExecute = "powershell -ExecutionPolicy Unrestricted -Command \"Invoke-WebRequest -Uri 'https://yourstorage.blob.core.windows.net/scripts/setup.ps1?...' -OutFile 'C:\\setup.ps1'; powershell -ExecutionPolicy Unrestricted -File 'C:\\setup.ps1'\""
 })
+
+
+
+
+resource "azurerm_virtual_machine_extension" "run_setup_script" {
+  name                       = "${random_pet.prefix.id}-customscript"
+  virtual_machine_id         = azurerm_windows_virtual_machine.main.id
+  publisher                  = "Microsoft.Compute"
+  type                       = "CustomScriptExtension"
+  type_handler_version       = "1.10"
+
+  settings = jsonencode({
+    commandToExecute = <<-EOT
+      powershell -ExecutionPolicy Unrestricted -Command "`
+        \$ErrorActionPreference = 'Stop'; `
+        Start-Transcript -Path C:\\setup.log -Force; `
+        Invoke-WebRequest -Uri 'https://yourstorage.blob.core.windows.net/scripts/setup.ps1?<sas-token>' -OutFile C:\\setup.ps1 -UseBasicParsing; `
+        powershell -ExecutionPolicy Unrestricted -File C:\\setup.ps1; `
+        Stop-Transcript"
+    EOT
+  })
+}
+
