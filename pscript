@@ -61,3 +61,21 @@ resource "azurerm_virtual_machine_extension" "run_setup_script" {
   })
 }
 
+
+
+
+
+resource "azurerm_virtual_machine_extension" "run_setup_script" {
+  name                       = "${random_pet.prefix.id}-customscript"
+  virtual_machine_id         = azurerm_windows_virtual_machine.main.id
+  publisher                  = "Microsoft.Compute"
+  type                       = "CustomScriptExtension"
+  type_handler_version       = "1.10"
+
+  settings = jsonencode({
+    commandToExecute = "powershell -ExecutionPolicy Unrestricted -Command \"$ErrorActionPreference = 'Stop'; Start-Sleep -Seconds 20; Start-Transcript -Path C:\\setup.log -Force; Invoke-WebRequest -Uri 'https://yourstorage.blob.core.windows.net/scripts/setup.ps1?<SAS>' -OutFile C:\\setup.ps1 -UseBasicParsing; powershell -ExecutionPolicy Unrestricted -File C:\\setup.ps1; Stop-Transcript;\""
+  })
+}
+
+
+
