@@ -1,0 +1,40 @@
+# setup.ps1
+$ErrorActionPreference = "Stop"
+
+Write-Output "Installing IIS..."
+Install-WindowsFeature -Name Web-Server -IncludeAllSubFeature -IncludeManagementTools
+
+Write-Output "Downloading DevOps Agent..."
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+cd C:\
+
+Invoke-WebRequest -Uri "https://yourstorage.blob.core.windows.net/devops-agents/vsts-agent-win-x64-4.259.0.zip?sp=..." -OutFile "agent.zip" -UseBasicParsing
+
+if (!(Test-Path "agent.zip")) {
+    Write-Error "Agent download failed"
+    exit 1
+}
+
+Expand-Archive -Path "agent.zip" -DestinationPath "C:\agent" -Force
+cd "C:\agent"
+
+Write-Output "Configuring agent..."
+.\config.cmd --unattended --url https://dev.azure.com/ibrahimdele --auth pat --token YOUR_TOKEN --pool SelfHostedWindowsPool --agent $env:COMPUTERNAME --acceptTeeEula
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Agent configuration failed"
+    exit 1
+}
+
+.\svc install
+.\svc start
+
+Write-Output "Setup completed successfully."
+
+
+
+
+settings = jsonencode({
+  commandToExecute = "powershell -ExecutionPolicy Unrestricted -Command \"Invoke-WebRequest -Uri 'https://yourstorage.blob.core.windows.net/scripts/setup.ps1?...' -OutFile 'C:\\setup.ps1'; powershell -ExecutionPolicy Unrestricted -File 'C:\\setup.ps1'\""
+})
